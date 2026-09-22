@@ -29,14 +29,8 @@ Add screenshots here:
 
 ### Requirements
 
-Before running MinecraftModAnalyzer, make sure you have:
+Before running Wonder, make sure you have:
 
 - Java installed
 - A supported Minecraft mod `.jar` file
 - Git (optional, if cloning the repository)
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/MinecraftModAnalyzer.git
-cd MinecraftModAnalyzer
