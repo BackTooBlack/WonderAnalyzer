@@ -1,4 +1,4 @@
-# MinecraftModAnalyzer-V1.0-Beta
+# MinecraftModAnalyzer-V0.1.0-Beta
 Its Made With AI And It May Have Some Bugs. 
 # MinecraftModAnalyzer
 
