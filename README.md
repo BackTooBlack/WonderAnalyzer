@@ -1,6 +1,5 @@
-# MinecraftModAnalyzer-V0.1.0-Beta
-Its Made With AI And It May Have Some Bugs. 
 # MinecraftModAnalyzer
+
 
 A powerful tool for analyzing Minecraft mods, inspecting mod metadata, dependencies, classes, resources, and other internal components.
 
