@@ -1,4 +1,4 @@
-# MinecraftModAnalyzer
+# WonderAnalyzer
 
 
 A powerful tool for analyzing Minecraft mods, inspecting mod metadata, dependencies, classes, resources, and other internal components.
