@@ -75,6 +75,7 @@
     cfgSumFound: document.getElementById('cfg-sum-found'),
     cfgSumCritical: document.getElementById('cfg-sum-critical'),
     cfgSumWarning: document.getElementById('cfg-sum-warning'),
+  cfgSumOptimizers: document.getElementById('cfg-sum-optimizers'),
     configGrid: document.getElementById('config-grid'),
     btnConfigBack: document.getElementById('btn-config-back'),
     configSearch: document.getElementById('config-search'),
@@ -294,6 +295,7 @@
     dom.cfgSumFound.textContent = s.found;
     dom.cfgSumCritical.textContent = s.critical;
     dom.cfgSumWarning.textContent = s.warning;
+    if (dom.cfgSumOptimizers) dom.cfgSumOptimizers.textContent = s.optimizers || 0;
 
     // Show which launcher folders were scanned (as chips)
     const esc = (str) => String(str).replace(/[&<>"']/g, (c) =>
@@ -337,7 +339,7 @@
       );
     }
 
-    const severityOrder = { critical: 0, suspicious: 1, warning: 2, error: 3, safe: 4 };
+    const severityOrder = { critical: 0, suspicious: 1, warning: 2, error: 3, info: 4, safe: 5 };
     results.sort((a, b) => (severityOrder[a.threatLevel] ?? 5) - (severityOrder[b.threatLevel] ?? 5));
 
     const noLaunchers = !(state.configSummary?.launchers?.length);

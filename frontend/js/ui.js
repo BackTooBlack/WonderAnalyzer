@@ -64,6 +64,7 @@
     if (mod.threatLevel === 'critical') return 'critical';
     if (mod.threatLevel === 'suspicious') return 'suspicious';
     if (mod.threatLevel === 'warning') return 'warning';
+    if (mod.threatLevel === 'info') return 'info';
     if (mod.obfuscationAnalysis?.isObfuscated) return 'obfuscated';
     return 'safe';
   }
@@ -86,6 +87,10 @@
         case 'warning':
           label = '🟡 WARNING';
           className = 'warning';
+          break;
+        case 'info':
+          label = '💎 OPTIMIZER';
+          className = 'info';
           break;
         case 'error':
           label = '❓ ERROR';

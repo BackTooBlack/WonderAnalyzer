@@ -104,6 +104,12 @@
   border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
+.threat-badge.info {
+  background: rgba(0, 240, 255, 0.10);
+  color: #22d3ee;
+  border: 1px solid rgba(0, 240, 255, 0.35);
+}
+
 .threat-badge.suspicious {
   background: rgba(249, 115, 22, 0.12);
   color: var(--suspicious-color);
