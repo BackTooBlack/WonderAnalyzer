@@ -87,4 +87,4 @@ WonderAnalyzer.exe  Portable build of the Tauri app
 
 ## License
 
-[MIT](LICENSE) © Freebuff
+[MIT](LICENSE)
