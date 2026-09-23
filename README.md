@@ -1,36 +1,98 @@
 # WonderAnalyzer
 
+> Advanced Minecraft Mod & Launcher Analyzer
 
-A powerful tool for analyzing Minecraft mods, inspecting mod metadata, dependencies, classes, resources, and other internal components.
+WonderAnalyzer is a Minecraft analysis tool designed to inspect Minecraft mods, installations, launcher files, configurations, and known cheat-related signatures.
+
+The project is focused on making Minecraft environment analysis faster, easier, and more automated.
+
+---
 
 ## ✨ Features
 
-- 🔍 Analyze Minecraft mod files
-- 📦 Support for `.jar` mod files
-- 🧩 Detect mod metadata and dependencies
-- 📋 Display mod information in a clean format
-- 🏗️ Inspect classes and packages
-- 📁 Analyze embedded resources
-- ⚡ Fast and lightweight
-- 🛠️ Useful for developers, server owners, and Minecraft modding enthusiasts
-- 🔎 Easily inspect the internal structure of Minecraft mods
+### 🔍 Mod Analysis
 
-## 📸 Preview
+- Analyze Minecraft `.jar` mod files
+- Inspect mod metadata
+- Detect dependencies
+- Inspect classes and packages
+- Analyze embedded resources
+- Detect known suspicious signatures
 
-> Screenshots and demonstrations will be added soon.
+### 🖥️ Launcher Scanner
 
-<!--
-Add screenshots here:
+WonderAnalyzer can automatically search for Minecraft installations and launchers inside `%APPDATA%`.
 
-![MinecraftModAnalyzer](assets/preview.png)
--->
+It can:
+
+- 🔎 Automatically locate Minecraft launchers
+- 📂 Detect Minecraft installations
+- ⚙️ Analyze launcher and Minecraft configuration files
+- 🧩 Scan detected installations
+- 🕵️ Search for known cheat-related configurations
+- 📋 Report detected signatures and suspicious files
+
+> **Launcher Scanner is currently in Beta and may still contain minor bugs or false positives.**
+
+---
+
+## 🧠 Detection System
+
+WonderAnalyzer uses a signature-based detection system to identify known cheat-related components, configurations, and patterns.
+
+The detection database is continuously being improved and expanded.
+
+### Current Detection Coverage
+
+- 300+ known signatures
+- Mod-based detections
+- Configuration-based detections
+- Launcher/environment analysis
+- Suspicious file detection
+
+> Detection results should always be reviewed manually. No automated detection system can guarantee perfect accuracy.
+
+---
+
+## 🧪 Development Status
+
+WonderAnalyzer is currently under active development.
+
+Some features may still be experimental or in Beta.
+
+Current development focus:
+
+- Improving detection accuracy
+- Expanding signature coverage
+- Improving launcher compatibility
+- Reducing false positives
+- Improving scanning performance
+- Adding new analysis features
+
+---
+
+## 🔓 Open Source
+
+WonderAnalyzer is planned to become an open-source project.
+
+The source code is currently **not included in this repository** due to its size and ongoing development.
+
+The source code will be published in a future release once it is ready to be made publicly available.
+
+Stay tuned for the upcoming source release. 🚀
+
+---
 
 ## 🚀 Getting Started
 
 ### Requirements
 
-Before running Wonder, make sure you have:
+- Java [VERSION]
+- Windows
+- Minecraft installation
 
-- Java installed
-- A supported Minecraft mod `.jar` file
-- Git (optional, if cloning the repository)
+### Build From Source
+
+```bash
+git clone https://github.com/[USERNAME]/WonderAnalyzer.git
+cd WonderAnalyzer
