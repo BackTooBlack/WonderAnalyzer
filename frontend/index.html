@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WonderAnalyzer</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/dashboard.css">
+  <link rel="stylesheet" href="styles/animations.css">
+  <link rel="stylesheet" href="styles/modern.css">
+</head>
+<body>
+  <!-- Custom Title Bar -->
+  <div class="titlebar" id="titlebar">
+    <div class="titlebar-title">
+      <svg class="titlebar-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      WonderAnalyzer
+    </div>
+    <div class="titlebar-controls">
+      <button class="titlebar-btn" id="btn-minimize" title="Minimize">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect y="5" width="12" height="1" fill="currentColor"/></svg>
+      </button>
+      <button class="titlebar-btn" id="btn-maximize" title="Maximize">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+      <button class="titlebar-btn titlebar-close" id="btn-close" title="Close">
+        <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="app-container">
+
+    <!-- ===== SCREEN: HOME / DIRECTORY SELECTOR ===== -->
+    <div class="screen active" id="screen-home">
+      <div class="home-content">
+        <!-- Logo & Title -->
+        <div class="hero-section">
+          <div class="hero-logo">
+            <div class="shield-icon">
+              <svg viewBox="0 0 64 64" width="80" height="80">
+                <defs>
+                  <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#00f0ff;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+                  </linearGradient>
+                </defs>
+                <path d="M32 4 L58 16 V36 C58 52 32 62 32 62 C32 62 6 52 6 36 V16 Z"
+                      fill="url(#shieldGrad)" opacity="0.15" stroke="url(#shieldGrad)" stroke-width="2"/>
+                <path d="M32 14 L48 22 V36 C48 46 32 52 32 52 C32 52 16 46 16 36 V22 Z"
+                      fill="url(#shieldGrad)" opacity="0.3"/>
+                <text x="32" y="38" text-anchor="middle" fill="url(#shieldGrad)" font-size="18" font-weight="bold">🛡️</text>
+              </svg>
+            </div>
+          </div>
+          <h1 class="hero-title">WonderAnalyzer</h1>
+          <p class="hero-subtitle">Advanced threat detection for Minecraft mods & cheat configs</p>
+          <p class="hero-version">v1.1 • 300+ Cheat Signatures • %APPDATA% Config Scanner</p>
+        </div>
+
+        <!-- Directory Selector Card -->
+        <div class="glass-card directory-card">
+          <div class="card-header">
+            <div class="card-header-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="card-title">Mods Directory</h2>
+              <p class="card-desc">Select your Minecraft mods folder to begin analysis</p>
+            </div>
+          </div>
+
+          <!-- Drop Zone -->
+          <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-content">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" class="drop-icon">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p class="drop-text">Drag & drop your mods folder here</p>
+              <p class="drop-subtext">or click to browse</p>
+            </div>
+            <input type="file" id="folder-input" webkitdirectory multiple style="display:none">
+          </div>
+
+          <!-- Selected Path Display -->
+          <div class="path-display" id="path-display" style="display:none;">
+            <div class="path-info">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#00f0ff" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span class="path-text" id="path-text"></span>
+              <span class="mod-count" id="mod-count"></span>
+            </div>
+            <button class="btn-clear" id="btn-clear" title="Clear selection">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Default Path Button -->
+          <div class="path-shortcuts">
+            <button class="btn-link" id="btn-default-path">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                <polyline points="13 2 13 9 20 9"/>
+              </svg>
+              Use default .minecraft/mods path
+            </button>
+          </div>
+
+          <!-- Scan Button -->
+          <button class="btn-scan" id="btn-scan" disabled>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span>Analyze Mods</span>
+            <div class="btn-scan-arrow">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+          </button>
+
+          <!-- Feature Tags -->
+          <div class="feature-tags">
+            <span class="tag">🔍 300+ Patterns</span>
+            <span class="tag">🦠 Malware Detection</span>
+            <span class="tag">🔒 Obfuscation Analysis</span>
+            <span class="tag">📡 Hash Verification</span>
+          </div>
+        </div>
+
+        <!-- %APPDATA% Cheat Config Scanner Card -->
+        <div class="glass-card directory-card" style="margin-top: 24px;">
+          <div class="card-header">
+            <div class="card-header-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="card-title">Cheat Config Scanner</h2>
+              <p class="card-desc">Finds every Minecraft launcher in %APPDATA% (.minecraft, Prism, MultiMC, ATLauncher, CurseForge, Feather, Modrinth...) and scans only its config files for cheat configs</p>
+            </div>
+          </div>
+
+          <!-- AppData Path Display -->
+          <div class="path-display" id="config-path-display" style="display:none;">
+            <div class="path-info">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#00f0ff" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span class="path-text" id="config-path-text"></span>
+            </div>
+          </div>
+
+          <!-- Scan Button -->
+          <button class="btn-scan" id="btn-config-scan">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span>Scan Minecraft Launchers in %APPDATA%</span>
+            <div class="btn-scan-arrow">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+          </button>
+
+          <!-- Feature Tags -->
+          <div class="feature-tags">
+            <span class="tag">🎮 All Minecraft Launchers</span>
+            <span class="tag">🧠 Content-Based Detection</span>
+            <span class="tag">📄 Config Formats Only (.conf/.txt/.json)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: SCANNING ===== -->
+    <div class="screen" id="screen-scanning">
+      <div class="scan-content">
+        <div class="scan-header">
+          <div class="scan-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring inner"></div>
+            <div class="spinner-icon">🔍</div>
+          </div>
+          <h2 class="scan-title" id="scan-title">Scanning Mods</h2>
+          <p class="scan-subtitle" id="scan-phase">Initializing...</p>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="scan-progress-container">
+          <div class="scan-progress-bar">
+            <div class="scan-progress-fill" id="scan-progress-fill"></div>
+            <div class="scan-progress-glow" id="scan-progress-glow"></div>
+          </div>
+          <div class="scan-progress-info">
+            <span id="scan-counter">0 / 0</span>
+            <span id="scan-percent">0%</span>
+          </div>
+        </div>
+
+        <!-- Current Mod -->
+        <div class="scan-current" id="scan-current">
+          <div class="scan-current-label">Currently analyzing</div>
+          <div class="scan-current-file" id="scan-current-file">-</div>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="scan-stats">
+          <div class="scan-stat">
+            <div class="scan-stat-value" id="stat-total">0</div>
+            <div class="scan-stat-label">Total</div>
+          </div>
+          <div class="scan-stat safe">
+            <div class="scan-stat-value" id="stat-safe">0</div>
+            <div class="scan-stat-label">✅ Safe</div>
+          </div>
+          <div class="scan-stat warning">
+            <div class="scan-stat-value" id="stat-warning">0</div>
+            <div class="scan-stat-label">⚠️ Warning</div>
+          </div>
+          <div class="scan-stat critical">
+            <div class="scan-stat-value" id="stat-critical">0</div>
+            <div class="scan-stat-label">🚨 Critical</div>
+          </div>
+        </div>
+
+        <!-- Abort Button -->
+        <button class="btn-abort" id="btn-abort">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          </svg>
+          Cancel Scan
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: RESULTS ===== -->
+    <div class="screen" id="screen-results">
+      <div class="results-container">
+        <!-- Results Header -->
+        <div class="results-header">
+          <div class="results-header-left">
+            <button class="btn-back" id="btn-back">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+              </svg>
+              New Scan
+            </button>
+            <h2 class="results-title">Scan Results</h2>
+            <span class="results-time" id="results-time"></span>
+          </div>
+          <div class="results-header-right">
+            <div class="results-search">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="results-search" placeholder="Search mods...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card total">
+            <div class="summary-icon">📦</div>
+            <div class="summary-data">
+              <div class="summary-value" id="sum-total">0</div>
+              <div class="summary-label">Total Mods</div>
+            </div>
+          </div>
+          <div class="summary-card safe">
+            <div class="summary-icon">✅</div>
+            <div class="summary-data">
+              <div class="summary-value" id="sum-safe">0</div>
+              <div class="summary-label">Verified / Safe</div>
+            </div>
+          </div>
+          <div class="summary-card warning">
+            <div class="summary-icon">⚠️</div>
+            <div class="summary-data">
+              <div class="summary-value" id="sum-warning">0</div>
+              <div class="summary-label">Warnings</div>
+            </div>
+          </div>
+          <div class="summary-card critical">
+            <div class="summary-icon">🚨</div>
+            <div class="summary-data">
+              <div class="summary-value" id="sum-critical">0</div>
+              <div class="summary-label">Critical</div>
+            </div>
+          </div>
+          <div class="summary-card obfuscated">
+            <div class="summary-icon">🔒</div>
+            <div class="summary-data">
+              <div class="summary-value" id="sum-obfuscated">0</div>
+              <div class="summary-label">Obfuscated</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All <span class="filter-count" id="filter-all"></span></button>
+          <button class="filter-tab" data-filter="critical">🚨 Critical <span class="filter-count" id="filter-critical"></span></button>
+          <button class="filter-tab" data-filter="suspicious">⚠️ Suspicious <span class="filter-count" id="filter-suspicious"></span></button>
+          <button class="filter-tab" data-filter="warning">🟡 Warning <span class="filter-count" id="filter-warning"></span></button>
+          <button class="filter-tab" data-filter="safe">✅ Safe <span class="filter-count" id="filter-safe"></span></button>
+          <button class="filter-tab" data-filter="obfuscated">🔒 Obfuscated <span class="filter-count" id="filter-obfuscated"></span></button>
+        </div>
+
+        <!-- Mod Cards Grid -->
+        <div class="mod-grid" id="mod-grid">
+          <!-- Cards inserted dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN: %APPDATA% CHEAT CONFIG RESULTS ===== -->
+    <div class="screen" id="screen-config-results">
+      <div class="results-container">
+        <!-- Header -->
+        <div class="results-header">
+          <div class="results-header-left">
+            <button class="btn-back" id="btn-config-back">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+              </svg>
+              Back
+            </button>
+            <h2 class="results-title">Cheat Config Findings</h2>
+            <span class="results-time" id="config-results-time"></span>
+          </div>
+          <div class="results-header-right">
+            <div class="results-search">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="config-search" placeholder="Search config files...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card total">
+            <div class="summary-icon">📁</div>
+            <div class="summary-data">
+              <div class="summary-value" id="cfg-sum-scanned">0</div>
+              <div class="summary-label">Files Scanned</div>
+            </div>
+          </div>
+          <div class="summary-card safe">
+            <div class="summary-icon">✅</div>
+            <div class="summary-data">
+              <div class="summary-value" id="cfg-sum-clean">0</div>
+              <div class="summary-label">Clean Files</div>
+            </div>
+          </div>
+          <div class="summary-card obfuscated">
+            <div class="summary-icon">📄</div>
+            <div class="summary-data">
+              <div class="summary-value" id="cfg-sum-found">0</div>
+              <div class="summary-label">Cheat Configs</div>
+            </div>
+          </div>
+          <div class="summary-card critical">
+            <div class="summary-icon">🚨</div>
+            <div class="summary-data">
+              <div class="summary-value" id="cfg-sum-critical">0</div>
+              <div class="summary-label">Critical</div>
+            </div>
+          </div>
+          <div class="summary-card warning">
+            <div class="summary-icon">⚠️</div>
+            <div class="summary-data">
+              <div class="summary-value" id="cfg-sum-warning">0</div>
+              <div class="summary-label">Warnings</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Launchers Scanned -->
+        <div id="config-launchers" style="display:none; margin: 0 0 20px; padding: 10px 14px; background: rgba(0,240,255,0.05); border: 1px solid rgba(0,240,255,0.12); border-radius: var(--radius-md); font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); word-break: break-all;"></div>
+
+        <!-- Findings Grid -->
+        <div class="mod-grid" id="config-grid">
+          <!-- Cards inserted dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MOD DETAIL MODAL ===== -->
+    <div class="modal-overlay" id="modal-overlay" style="display:none;">
+      <div class="modal" id="modal-detail">
+        <div class="modal-header">
+          <div class="modal-header-left">
+            <div class="modal-threat-badge" id="modal-threat-badge">SAFE</div>
+            <h2 class="modal-title" id="modal-title">Mod Name</h2>
+          </div>
+          <button class="modal-close" id="modal-close">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body" id="modal-body">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/bridge.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/detail.js"></script>
+  <script src="js/animations.js"></script>
+</body>
+</html>
