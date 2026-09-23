@@ -19,6 +19,8 @@ A portable `WonderAnalyzer.exe` (~8.6 MB) is included at the repository root —
 - Reads only whitelisted config formats: `.config .conf .cfg .ini .txt .json .yaml .yml .toml .properties`
 - 300+ cheat signatures with **strong / weak gating**: a file must look like a configuration *and* carry real cheat signal (one strong signature, two distinct weak ones, or a weak hit plus a cheat-signal filename/folder) before it is flagged — clean files stay clean
 - Java-code pattern categories (mixins, access transformers, proxies) are excluded from config scans to avoid false positives
+- Launcher **logs** (`latest.log`, `log.txt`, up to 32 MB) are scanned for cheat-module evidence — strong signatures only, so chat mentions can never flag a log
+- Known **optimizers** (e.g. Marlow's Crystal Optimizer) are never flagged — they get a dedicated 💎 Optimizers mention so you always know which optimizer you're running
 
 **UI**
 - Modern dark theme: gradient actions, accent-edged result cards, launcher chips, pill filters, live scan counters, detail modal, search

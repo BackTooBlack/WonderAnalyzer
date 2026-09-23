@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="WonderAnalyzer logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0b16"/>
+      <stop offset="1" stop-color="#191240"/>
+    </linearGradient>
+    <radialGradient id="bloom" cx="0.5" cy="0.32" r="0.6">
+      <stop offset="0" stop-color="#7c3aed" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="shieldFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a1542"/>
+      <stop offset="1" stop-color="#0d0b24"/>
+    </linearGradient>
+    <linearGradient id="mag" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+    <radialGradient id="lens" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0.05"/>
+    </radialGradient>
+    <filter id="blurGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="dropShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="28" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <clipPath id="badgeClip">
+      <rect x="64" y="64" width="896" height="896" rx="200"/>
+    </clipPath>
+    <clipPath id="shieldClip">
+      <path d="M512 196 L760 282 V512 C760 668 650 776 512 820 C374 776 264 668 264 512 V282 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Badge -->
+  <g filter="url(#dropShadow)">
+    <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
+  </g>
+  <g clip-path="url(#badgeClip)">
+    <rect x="64" y="64" width="896" height="896" fill="url(#bloom)"/>
+
+    <!-- Shield glow -->
+    <path d="M512 196 L760 282 V512 C760 668 650 776 512 820 C374 776 264 668 264 512 V282 Z"
+          fill="none" stroke="url(#rim)" stroke-width="26" filter="url(#blurGlow)" opacity="0.75"/>
+    <!-- Shield -->
+    <path d="M512 196 L760 282 V512 C760 668 650 776 512 820 C374 776 264 668 264 512 V282 Z"
+          fill="url(#shieldFill)" stroke="url(#rim)" stroke-width="26" stroke-linejoin="round"/>
+    <!-- Inner rim highlight -->
+    <path d="M512 196 L760 282 V512 C760 668 650 776 512 820 C374 776 264 668 264 512 V282 Z"
+          fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="4"
+          transform="translate(512 508) scale(0.945) translate(-512 -508)"/>
+
+    <!-- Pixel-cube motif (Minecraft hint), clipped into the shield base -->
+    <g clip-path="url(#shieldClip)">
+      <polygon points="442,676 466,664 490,676 466,688" fill="#67e8f9"/>
+      <polygon points="442,676 466,688 466,722 442,710" fill="#7c3aed"/>
+      <polygon points="466,688 490,676 490,710 466,722" fill="#4c1d95"/>
+
+      <polygon points="494,690 518,678 542,690 518,702" fill="#67e8f9"/>
+      <polygon points="494,690 518,702 518,736 494,724" fill="#7c3aed"/>
+      <polygon points="518,702 542,690 542,724 518,736" fill="#4c1d95"/>
+
+      <polygon points="546,676 570,664 594,676 570,688" fill="#67e8f9"/>
+      <polygon points="546,676 570,688 570,722 546,710" fill="#7c3aed"/>
+      <polygon points="570,688 594,676 594,710 570,722" fill="#4c1d95"/>
+    </g>
+
+    <!-- Magnifier glow -->
+    <circle cx="496" cy="440" r="148" fill="none" stroke="url(#mag)" stroke-width="34"
+            filter="url(#blurGlow)" opacity="0.8"/>
+    <!-- Magnifier handle -->
+    <line x1="602" y1="546" x2="716" y2="660" stroke="url(#mag)" stroke-width="54" stroke-linecap="round"/>
+    <line x1="602" y1="546" x2="716" y2="660" stroke="#ffffff" stroke-opacity="0.18" stroke-width="12" stroke-linecap="round"/>
+    <!-- Magnifier lens -->
+    <circle cx="496" cy="440" r="148" fill="url(#lens)" stroke="url(#mag)" stroke-width="34"/>
+    <circle cx="496" cy="440" r="131" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="3"/>
+    <path d="M398 378 A131 131 0 0 1 476 322" fill="none" stroke="#ffffff" stroke-opacity="0.45"
+          stroke-width="14" stroke-linecap="round"/>
+    <!-- Sparkle -->
+    <path d="M580 356 l10 24 24 10 -24 10 -10 24 -10 -24 -24 -10 24 -10 z" fill="#ffffff" fill-opacity="0.85"/>
+  </g>
+
+  <!-- Badge edge -->
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="2"/>
+</svg>
