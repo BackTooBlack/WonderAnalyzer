@@ -1,0 +1,174 @@
+/**
+ * WonderAnalyzer — modern UI layer
+ * Scoped polish: summary cards, launcher chips, config findings grid,
+ * scan buttons. Loaded last so it overrides earlier sheets.
+ */
+
+/* ===== Scan buttons: gradient + shine sweep ===== */
+.btn-scan {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #00f0ff 0%, #7c3aed 100%) !important;
+  border: none !important;
+  color: #05050a !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 24px -8px rgba(0, 240, 255, 0.45), 0 4px 16px -6px rgba(124, 58, 237, 0.4);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.btn-scan:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px -8px rgba(0, 240, 255, 0.55), 0 8px 24px -6px rgba(124, 58, 237, 0.5);
+  filter: brightness(1.06);
+}
+.btn-scan:active:not(:disabled) { transform: translateY(0); }
+.btn-scan::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -80%;
+  width: 55%; height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+.btn-scan:hover::after { left: 130%; }
+
+/* ===== Summary cards: glass + colored accent ===== */
+.summary-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px !important;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.summary-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: currentColor;
+  opacity: 0.85;
+}
+.summary-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 12px 28px -14px rgba(0, 0, 0, 0.7);
+}
+.summary-card.total    { color: #8b93a7; }
+.summary-card.safe     { color: #10b981; }
+.summary-card.warning  { color: #f59e0b; }
+.summary-card.critical { color: #ff3b5c; }
+.summary-card.obfuscated { color: #7c3aed; }
+.summary-card .summary-icon { filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)); }
+.summary-card .summary-value { color: var(--text-primary, #eef0f6); }
+
+/* ===== Launchers bar: chips ===== */
+.launchers-bar {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px !important;
+  background: rgba(0, 240, 255, 0.045) !important;
+  border: 1px solid rgba(0, 240, 255, 0.14) !important;
+  border-radius: 14px !important;
+  font-family: var(--font-body, inherit) !important;
+  color: var(--text-secondary) !important;
+  word-break: normal !important;
+}
+.launchers-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #00f0ff;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.launcher-chip {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;          /* keeps the folder tail visible when clipped */
+  text-align: left;
+}
+
+/* ===== Findings / mod cards: accent edge + hover lift ===== */
+.mod-card {
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.mod-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00f0ff, #7c3aed);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.mod-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.8);
+}
+.mod-card:hover::before { opacity: 1; }
+.mod-card.threat-critical::before  { background: linear-gradient(90deg, #ff3b5c, #ff7a95); opacity: 1; }
+.mod-card.threat-suspicious::before { background: linear-gradient(90deg, #f97316, #fbbf24); opacity: 1; }
+.mod-card.threat-warning::before   { background: linear-gradient(90deg, #f59e0b, #fde68a); opacity: 1; }
+
+/* ===== Filter tabs: pill look ===== */
+.filter-tab {
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.filter-tab:hover { transform: translateY(-1px); border-color: rgba(0, 240, 255, 0.35); }
+.filter-tab.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.16), rgba(124, 58, 237, 0.16)) !important;
+  border-color: rgba(0, 240, 255, 0.5) !important;
+}
+
+/* ===== Back / search inputs ===== */
+.btn-back, .results-search {
+  border-radius: 12px !important;
+  backdrop-filter: blur(8px);
+}
+.results-search input {
+  border-radius: 12px !important;
+}
+
+/* ===== Threat badges: slight glow ===== */
+.threat-badge.critical  { box-shadow: 0 0 14px -4px rgba(255, 59, 92, 0.65); }
+.threat-badge.suspicious { box-shadow: 0 0 14px -4px rgba(249, 115, 22, 0.65); }
+.threat-badge.warning   { box-shadow: 0 0 14px -4px rgba(245, 158, 11, 0.6); }
+.threat-badge.safe      { box-shadow: 0 0 14px -4px rgba(16, 185, 129, 0.6); }
+
+/* ===== Empty states ===== */
+.empty-state {
+  padding: 48px 24px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.empty-state-icon { font-size: 40px; margin-bottom: 8px; }
+.empty-state-title { font-size: 16px; font-weight: 700; color: var(--text-primary, #eef0f6); }
+.empty-state-desc { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+
+/* ===== Titlebar: subtle bottom border ===== */
+.titlebar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(10px);
+}

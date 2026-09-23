@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Electron-builder leftovers
+builder-debug*.yml
+builder-effective-config.yaml
+
+# Editor / OS
+.freebuff/
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db

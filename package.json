@@ -1,0 +1,61 @@
+{
+  "name": "wonder-analyzer",
+  "version": "1.2.0",
+  "description": "WonderAnalyzer - Detect cheats, malware, suspicious mods, and cheat config files in %APPDATA%",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "tauri build",
+    "build:electron": "electron-builder --win portable",
+    "build:dir": "electron-builder --win dir"
+  },
+  "author": "Freebuff",
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.5",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-packager": "^17.1.2"
+  },
+  "dependencies": {
+    "yauzl": "^3.1.0"
+  },
+  "build": {
+    "appId": "com.freebuff.wonderanalyzer",
+    "productName": "WonderAnalyzer",
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon.ico",
+      "signingHashAlgorithms": null,
+      "signAndEditExecutable": false,
+      "verifyUpdateCodeSignature": false
+    },
+    "portable": {
+      "artifactName": "WonderAnalyzer.exe"
+    },
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US"
+    ],
+    "files": [
+      "main.js",
+      "preload.js",
+      "backend/**/*",
+      "frontend/**/*",
+      "assets/**/*",
+      "!node_modules/yauzl/test/**",
+      "!**/*.md",
+      "!**/*.map"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  }
+}
