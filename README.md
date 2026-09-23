@@ -1,5 +1,7 @@
 # WonderAnalyzer
 
+⚠️Note: This build guide is for 1.2.0 and newer versions
+
 WonderAnalyzer is a desktop security analyzer for Minecraft. It inspects **mods** for cheats, malware and obfuscation, verifies their hashes against **Modrinth**, and automatically hunts **cheat configuration files** inside the Minecraft launcher folders of your `%APPDATA%`.
 
 A portable `WonderAnalyzer.exe` (~8.6 MB) is included at the repository root — no installer, no dependencies to install.
