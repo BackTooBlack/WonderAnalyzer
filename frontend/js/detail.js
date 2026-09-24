@@ -33,8 +33,16 @@
           badge.style.cssText = 'background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);';
           break;
         case 'info':
-          badge.textContent = '💎 OPTIMIZER';
-          badge.style.cssText = 'background: rgba(0,240,255,0.12); color: #22d3ee; border: 1px solid rgba(0,240,255,0.3);';
+          if (analysis.modId === 'client') {
+            badge.textContent = '✅ OFFICIAL CLIENT';
+            badge.style.cssText = 'background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);';
+          } else if (analysis.modId === 'report') {
+            badge.textContent = 'ℹ️ DIAGNOSTIC REPORT';
+            badge.style.cssText = 'background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3);';
+          } else {
+            badge.textContent = '💎 OPTIMIZER';
+            badge.style.cssText = 'background: rgba(0,240,255,0.12); color: #22d3ee; border: 1px solid rgba(0,240,255,0.3);';
+          }
           break;
         case 'error':
           badge.textContent = '❓ ANALYSIS ERROR';
@@ -112,8 +120,16 @@
         desc = 'Some suspicious patterns were detected. Further investigation may be needed.';
         break;
       case 'info':
-        label = 'Optimizer';
-        desc = 'A known performance optimizer was detected. It is not a cheat — this entry only tells you which optimizer is in use.';
+        if (analysis.modId === 'client') {
+          label = 'Official Client File';
+          desc = 'This file ships with a verified Minecraft client (Feather, Lunar, Badlion or LabyMod). Matches are shown as an official-client mention and can never flag as a cheat.';
+        } else if (analysis.modId === 'report') {
+          label = 'Diagnostic Report';
+          desc = 'This is a crash/diagnostic file. Any signature matches inside it are mentions only — crash reports are never flagged as cheat configs.';
+        } else {
+          label = 'Optimizer';
+          desc = 'A known performance optimizer was detected. It is not a cheat — this entry only tells you which optimizer is in use.';
+        }
         break;
       default:
         label = 'Clean';

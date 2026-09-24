@@ -269,6 +269,18 @@
               </svg>
               <input type="text" id="results-search" placeholder="Search mods...">
             </div>
+            <label class="sort-box" title="Sort mod results">
+              <span>Sort</span>
+              <select id="results-sort">
+                <option value="threat">Threat level</option>
+                <option value="name-asc">Name A→Z</option>
+                <option value="name-desc">Name Z→A</option>
+                <option value="size-desc">Size ↓</option>
+                <option value="size-asc">Size ↑</option>
+                <option value="score-desc">Score ↓</option>
+                <option value="score-asc">Score ↑</option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -350,6 +362,18 @@
               </svg>
               <input type="text" id="config-search" placeholder="Search config files...">
             </div>
+            <label class="sort-box" title="Sort findings">
+              <span>Sort</span>
+              <select id="config-sort">
+                <option value="threat">Threat level</option>
+                <option value="name-asc">Name A→Z</option>
+                <option value="name-desc">Name Z→A</option>
+                <option value="size-desc">Size ↓</option>
+                <option value="size-asc">Size ↑</option>
+                <option value="score-desc">Score ↓</option>
+                <option value="score-asc">Score ↑</option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -397,10 +421,27 @@
               <div class="summary-label">Optimizers</div>
             </div>
           </div>
+          <div class="summary-card critical">
+            <div class="summary-icon">🎮</div>
+            <div class="summary-data">
+              <div class="summary-value" id="cfg-sum-artifacts">0</div>
+              <div class="summary-label">Cheat Artifacts</div>
+            </div>
+          </div>
+          <div class="summary-card safe">
+            <div class="summary-icon">✅</div>
+            <div class="summary-data">
+              <div class="summary-value" id="cfg-sum-clients">0</div>
+              <div class="summary-label">Official Clients</div>
+            </div>
+          </div>
         </div>
 
         <!-- Launchers Scanned -->
         <div id="config-launchers" style="display:none; margin: 0 0 20px; padding: 10px 14px; background: rgba(0,240,255,0.05); border: 1px solid rgba(0,240,255,0.12); border-radius: var(--radius-md); font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono); word-break: break-all;"></div>
+
+        <!-- Category Filter Tabs (built dynamically from finding categories) -->
+        <div class="filter-tabs" id="config-filter-tabs"></div>
 
         <!-- Findings Grid -->
         <div class="mod-grid" id="config-grid">

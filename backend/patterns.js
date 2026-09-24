@@ -263,6 +263,8 @@ const CHEAT_PATTERNS = {
       { name: 'Ares', regex: /\bares\s*(client|mod)\b/i, severity: 'high' },
       { name: 'Tenacity', regex: /\btenacity\s*(client|mod)\b/i, severity: 'high' },
       { name: 'Dortware', regex: /\bdort\s*ware\b|\bdortware\b/i, severity: 'critical' },
+      { name: 'EchoClient', regex: /\bechoclient\b|\becho\s*client\b/i, severity: 'critical' },
+      { name: 'ZenithMacro', regex: /\bzenith[-_\s]?macros?\b|\bzenith\s*macro\b/i, severity: 'critical' },
     ]
   },
 
@@ -286,6 +288,9 @@ const CHEAT_PATTERNS = {
       { name: 'Smoke', regex: /\bsmoke\s*(obfusc|protect)\b/i, severity: 'high' },
       { name: 'Scuti', regex: /\bscuti\s*(obfusc|protect)\b/i, severity: 'high' },
       { name: 'JNIC', regex: /\bjnic\b/i, severity: 'high' },
+      // Literal Zelix/KlassMaster markers (the classic form above needs both
+      // words close together; real ZKM jars embed them individually).
+      { name: 'ZelixKlassMaster', regex: /\bzelix\b|\bklass\s*master\b|\bklassmaster\b|\bklassemaster\b/i, severity: 'critical' },
     ]
   },
 
@@ -434,6 +439,11 @@ const KNOWN_LEGITIMATE_MODS = [
   'create', 'create-fabric', 'create-mechanical', 'immersive-engineering',
   'twilight-forest', 'biomes-o-plenty', 'oh-the-biomes-youll-go',
   'shaders-mod', 'optishine', 'canvas-renderer', 'rubidium',
+  // Keep parity with scripts/accept-modscan.js LEGIT_IDS so known-legit
+  // manifest ids are never threat-flagged by either scanner.
+  'fabricloader', 'iris-neoforge', 'architectury-api', 'ferritecore',
+  'entityculling', 'indium', 'replaymod', 'xaerominimap', 'xaeroworldmap',
+  'smoothboot', 'nvidium', 'moreculling', 'lambdynlights', 'cloth-config4',
 ];
 
 // Suspicious download sources

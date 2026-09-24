@@ -50,6 +50,7 @@
       <div class="mod-card-meta">
         ${createMetaTags(mod)}
       </div>
+      ${createCategoryChips(mod)}
       ${createThreatTags(mod)}
     `;
 
@@ -89,8 +90,21 @@
           className = 'warning';
           break;
         case 'info':
-          label = '💎 OPTIMIZER';
-          className = 'info';
+          // Info mentions carry their own story: optimizer / official client /
+          // diagnostic report — never a threat.
+          if (mod.modId === 'client') {
+            label = '✅ OFFICIAL';
+            className = 'info';
+          } else if (mod.modId === 'report') {
+            label = 'ℹ️ REPORT';
+            className = 'info';
+          } else if (mod.modId === 'artifact') {
+            label = '🎮 ARTIFACT';
+            className = 'info';
+          } else {
+            label = '💎 OPTIMIZER';
+            className = 'info';
+          }
           break;
         case 'error':
           label = '❓ ERROR';
@@ -202,6 +216,19 @@
     }
 
     return `<div class="mod-card-threats">${tags.join('')}</div>`;
+  }
+
+  /**
+   * APPDATA-checker findings carry a `categories` map keyed by category —
+   * show each flag's category as a chip so the row explains WHY it flagged.
+   */
+  function createCategoryChips(mod) {
+    if (!mod.isConfigScan || !mod.categories) return '';
+    const keys = Object.keys(mod.categories);
+    if (keys.length === 0) return '';
+    return `<div class="mod-card-cats">${keys
+      .map(k => `<span class="cat-chip">${escapeHtml(k)}</span>`)
+      .join('')}</div>`;
   }
 
   function getScoreColor(score) {

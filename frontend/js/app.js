@@ -13,11 +13,14 @@
     scanSummary: null,
     currentFilter: 'all',
     searchQuery: '',
+    sortMode: 'threat',
+    configSortMode: 'threat',
     scanning: false,
     scanMode: 'mods',
     configResults: null,
     configSummary: null,
     configQuery: '',
+    configFilter: 'all',
   };
 
   // ===== DOM References =====
@@ -68,6 +71,7 @@
     modGrid: document.getElementById('mod-grid'),
     btnBack: document.getElementById('btn-back'),
     resultsSearch: document.getElementById('results-search'),
+    resultsSort: document.getElementById('results-sort'),
     // Config results
     configResultsTime: document.getElementById('config-results-time'),
     cfgSumScanned: document.getElementById('cfg-sum-scanned'),
@@ -76,10 +80,14 @@
     cfgSumCritical: document.getElementById('cfg-sum-critical'),
     cfgSumWarning: document.getElementById('cfg-sum-warning'),
   cfgSumOptimizers: document.getElementById('cfg-sum-optimizers'),
+    cfgSumArtifacts: document.getElementById('cfg-sum-artifacts'),
+    cfgSumClients: document.getElementById('cfg-sum-clients'),
     configGrid: document.getElementById('config-grid'),
     btnConfigBack: document.getElementById('btn-config-back'),
     configSearch: document.getElementById('config-search'),
+    configSort: document.getElementById('config-sort'),
     configLaunchers: document.getElementById('config-launchers'),
+    configFilterTabs: document.getElementById('config-filter-tabs'),
     // Modal
     modalOverlay: document.getElementById('modal-overlay'),
     modalTitle: document.getElementById('modal-title'),
@@ -242,6 +250,44 @@
     renderConfigGrid();
   });
 
+  dom.configSort.addEventListener('change', (e) => {
+    state.configSortMode = e.target.value;
+    renderConfigGrid();
+  });
+
+  // ===== Category filter tabs (%APPDATA% checker): All / Obfuscated / each flag subject =====
+  dom.configFilterTabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter-tab');
+    if (!btn) return;
+    dom.configFilterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    state.configFilter = btn.dataset.cat;
+    renderConfigGrid();
+  });
+
+  function buildConfigFilterTabs() {
+    const results = state.configResults || [];
+    const esc = (str) => String(str).replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    const counts = {};
+    let obfuscated = 0;
+    for (const r of results) {
+      if (r.obfuscationAnalysis?.isObfuscated) obfuscated++;
+      for (const k of Object.keys(r.categories || {})) {
+        counts[k] = (counts[k] || 0) + 1;
+      }
+    }
+
+    const keys = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+    let html = `<button class="filter-tab active" data-cat="all">All <span class="filter-count">${results.length}</span></button>`;
+    html += `<button class="filter-tab" data-cat="__obfuscated">🔒 Obfuscated <span class="filter-count">${obfuscated}</span></button>`;
+    for (const k of keys) {
+      html += `<button class="filter-tab" data-cat="${esc(k)}">${esc(k)} <span class="filter-count">${counts[k]}</span></button>`;
+    }
+    dom.configFilterTabs.innerHTML = html;
+  }
+
   async function startConfigScan() {
     state.scanMode = 'config';
     state.scanning = true;
@@ -296,6 +342,8 @@
     dom.cfgSumCritical.textContent = s.critical;
     dom.cfgSumWarning.textContent = s.warning;
     if (dom.cfgSumOptimizers) dom.cfgSumOptimizers.textContent = s.optimizers || 0;
+    if (dom.cfgSumArtifacts) dom.cfgSumArtifacts.textContent = s.artifacts || 0;
+    if (dom.cfgSumClients) dom.cfgSumClients.textContent = s.clients || 0;
 
     // Show which launcher folders were scanned (as chips)
     const esc = (str) => String(str).replace(/[&<>"']/g, (c) =>
@@ -325,6 +373,10 @@
 
     dom.configSearch.value = '';
     state.configQuery = '';
+    dom.configSort.value = 'threat';
+    state.configSortMode = 'threat';
+    state.configFilter = 'all';
+    buildConfigFilterTabs();
 
     renderConfigGrid();
     showScreen('configResults');
@@ -339,8 +391,14 @@
       );
     }
 
-    const severityOrder = { critical: 0, suspicious: 1, warning: 2, error: 3, info: 4, safe: 5 };
-    results.sort((a, b) => (severityOrder[a.threatLevel] ?? 5) - (severityOrder[b.threatLevel] ?? 5));
+    // Category filter (All / Obfuscated / individual flag subjects)
+    if (state.configFilter === '__obfuscated') {
+      results = results.filter(r => r.obfuscationAnalysis?.isObfuscated);
+    } else if (state.configFilter !== 'all') {
+      results = results.filter(r => r.categories && r.categories[state.configFilter]);
+    }
+
+    applySort(results, state.configSortMode);
 
     const noLaunchers = !(state.configSummary?.launchers?.length);
     const emptyHtml = noLaunchers
@@ -415,6 +473,13 @@
 
     if (!state.scanResults || !state.scanSummary) return;
 
+    dom.resultsSort.value = 'threat';
+    state.sortMode = 'threat';
+    // Reset category tabs to "All" for a fresh scan
+    state.currentFilter = 'all';
+    document.querySelectorAll('#screen-results .filter-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.filter === 'all'));
+
     const s = state.scanSummary;
     dom.resultsTime.textContent = new Date(s.timestamp).toLocaleString();
     dom.sumTotal.textContent = s.total;
@@ -455,6 +520,32 @@
     filterAndRenderMods();
   });
 
+  // ===== Sort (shared by mod analyze + %APPDATA% checker) =====
+  dom.resultsSort.addEventListener('change', (e) => {
+    state.sortMode = e.target.value;
+    filterAndRenderMods();
+  });
+
+  function applySort(list, mode) {
+    const severityOrder = { critical: 0, suspicious: 1, warning: 2, error: 3, info: 4, safe: 5 };
+    const byName = (a, b) =>
+      String(a.name || '').localeCompare(String(b.name || ''), undefined,
+        { numeric: true, sensitivity: 'base' });
+    switch (mode) {
+      case 'name-asc': return list.sort(byName);
+      case 'name-desc': return list.sort((a, b) => byName(b, a));
+      case 'size-desc': return list.sort((a, b) => (b.size || 0) - (a.size || 0));
+      case 'size-asc': return list.sort((a, b) => (a.size || 0) - (b.size || 0));
+      case 'score-desc': return list.sort((a, b) =>
+        (b.threatScore || 0) - (a.threatScore || 0) || byName(a, b));
+      case 'score-asc': return list.sort((a, b) =>
+        (a.threatScore || 0) - (b.threatScore || 0) || byName(a, b));
+      default: return list.sort((a, b) =>
+        ((severityOrder[a.threatLevel] ?? 9) - (severityOrder[b.threatLevel] ?? 9)) ||
+        byName(a, b));
+    }
+  }
+
   function filterAndRenderMods() {
     if (!state.scanResults) return;
     let filtered = [...state.scanResults];
@@ -488,9 +579,7 @@
       );
     }
 
-    // Sort: critical first, then suspicious, then warning, then safe
-    const severityOrder = { critical: 0, suspicious: 1, warning: 2, error: 3, safe: 4 };
-    filtered.sort((a, b) => (severityOrder[a.threatLevel] || 5) - (severityOrder[b.threatLevel] || 5));
+    applySort(filtered, state.sortMode);
 
     renderModCards(filtered);
   }
@@ -515,6 +604,9 @@
   // Export state and dom to global scope for other modules
   window.appState = state;
   window.appDom = dom;
+  // Exposed so the results screen can be driven outside Electron (tests/preview)
+  window.__showConfigResults = showConfigResults;
+  window.__buildConfigFilterTabs = buildConfigFilterTabs;
   window.showModal = function(analysis) {
     if (typeof window.renderDetail === 'function') {
       window.renderDetail(analysis);
