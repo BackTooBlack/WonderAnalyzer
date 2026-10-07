@@ -40,13 +40,15 @@ const mockWebContents = { send() {}, isDestroyed() { return false; } };
   const zprof = find('zenith-macros/profiles.json');
   if (!zprof || zprof.threatLevel !== 'critical' || zprof.modId !== 'artifact') bad.push('zenith profiles not critical artifact');
 
-  // ===== contexts =====
+  // ===== clean files must be skipped entirely (never listed) =====
   const crash = results.find((f) => norm(f.name).includes('crash-2026-09-23'));
-  if (crash && (crash.threatLevel !== 'info' || crash.modId !== 'report')) bad.push('crash report must be info/report');
+  if (crash) bad.push('crash report must be skipped, not listed');
   const feather = find('.feather/modules.json');
-  if (!feather || feather.threatLevel !== 'info' || feather.modId !== 'client') bad.push('feather must be info/client');
+  if (feather) bad.push('feather modules.json must be skipped (clean file)');
   const opt = results.find((f) => f.threatLevel === 'info' && f.modId === 'optimizer');
-  if (!opt) bad.push('optimizer mention missing');
+  if (opt) bad.push('optimizer must be skipped (clean file)');
+  const infos = results.filter((f) => f.threatLevel === 'info');
+  if (infos.length !== 0) bad.push(`info entries=${infos.length} expected 0 (clean files skipped)`);
 
   // ===== detections =====
   const ka = find('.minecraft/config/killaura.config');

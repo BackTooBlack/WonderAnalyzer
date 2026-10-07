@@ -1,6 +1,6 @@
 [package]
 name = "wonder-analyzer"
-version = "1.2.0"
+version = "1.4.0"
 authors = ["freebuff"]
 edition = "2021"
 description = "WonderAnalyzer - Minecraft mod & cheat-config analyzer"
@@ -31,3 +31,12 @@ ureq = "2"
 strip = true
 lto = true
 codegen-units = 1
+
+# Windows 7 compatibility: the *-win7-windows-msvc targets report
+# target_vendor="win7", which upstream ctor/dtor reject with a compile_error!
+# and use no CRT link section for. The vendored copies add win7 to the
+# allow-list and to the ".CRT$XCU" arm; the generated code is otherwise
+# byte-identical to upstream (same MSVC linker, same sections).
+[patch.crates-io]
+ctor = { path = "vendor/ctor-0.8.0" }
+dtor = { path = "vendor/dtor-0.3.0" }

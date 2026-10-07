@@ -7,7 +7,8 @@
 //!   * per-line 256 KB cap so minified single-line JSON can't slow the DFA
 //!   * comment-line freelook/freecam rule (prose about freecam integration
 //!     never flags; an enabled `"freecam": true` still does)
-//!   * trusted first-party clients / diagnostic files report as info only
+//!   * trusted first-party clients / diagnostic files are skipped from the
+//!     results entirely (the summary still counts optimizer/client mentions)
 //!   * diagnostic-shaped files (crash-*.txt, rasadhlp.dll, *.dmp) never
 //!     contribute matches
 
@@ -175,7 +176,17 @@ static STRONG_KEYS: std::sync::LazyLock<Vec<String>> = std::sync::LazyLock::new(
     STRONG_KEYS_SRC.iter().map(|b| crate::malware::decode(b)).collect()
 });
 
-const OPTIMIZER_EXPLAINED_PATTERNS: &[&str] = &["CrystalOptimizer"];
+// XOR-encoded (PATTERN_XOR_KEY) — decoded once at init so the pattern name
+// never sits in the shipped EXE as plaintext (VT).
+const OPTIMIZER_EXPLAINED_PATTERNS_SRC: &[&[u8]] = &[
+    &[25,40,35,41,46,59,54,21,42,46,51,55,51,32,63,40], // CrystalOptimizer
+];
+static OPTIMIZER_EXPLAINED_PATTERNS: std::sync::LazyLock<Vec<String>> = std::sync::LazyLock::new(|| {
+    OPTIMIZER_EXPLAINED_PATTERNS_SRC
+        .iter()
+        .map(|b| crate::malware::decode(b))
+        .collect()
+});
 
 fn sev_rank(s: &str) -> u8 {
     match s {
@@ -597,6 +608,61 @@ fn is_asset_store(full: &Path) -> bool {
         || norm.ends_with("/assets/virtual")
 }
 
+// ===== Launcher-managed metadata: never a cheat config =====
+// Bundled JRE conf files, Mojang version manifests and launcher
+// mod/modpack catalogs ship with the launcher itself; their stock
+// content (javax.sound comments, library URLs, mod ids like "freecam")
+// produced systematic false flags. Mirrors isExcludedMetadataFile in
+// backend/configScanner.js (JS reference implementation).
+const JRE_CONF_FILES: &[&str] = &[
+    "sound.properties",
+    "net.properties",
+    "management.properties",
+    "logging.properties",
+    "deprecation.properties",
+    "jaxp.properties",
+];
+
+fn is_excluded_metadata_path(full: &Path) -> bool {
+    let norm = full
+        .to_string_lossy()
+        .replace('\\', "/")
+        .to_ascii_lowercase();
+    let segs: Vec<&str> = norm.split('/').collect();
+    let file = segs.last().copied().unwrap_or("");
+    // 1. bundled Java runtime dirs (Prism & friends: java-runtime-*)
+    if segs.iter().any(|s| s.starts_with("java-runtime-")) {
+        return true;
+    }
+    // 2. stock JRE conf files (any layout: <runtime>/conf/*.properties)
+    if JRE_CONF_FILES.contains(&file) && segs.iter().any(|s| *s == "conf") {
+        return true;
+    }
+    // 3. Mojang version manifests: versions/<ver>/<ver>.json
+    if let Some(dot) = file.rfind('.') {
+        if dot > 0 && file.ends_with(".json") {
+            let stem = &file[..dot];
+            let parent = if segs.len() >= 2 {
+                segs[segs.len() - 2]
+            } else {
+                ""
+            };
+            if stem == parent && segs.iter().any(|s| *s == "versions") {
+                return true;
+            }
+            // 3b. launcher vanilla metadata stores (Prism: meta/net.minecraft/*.json)
+            if segs.iter().any(|s| *s == "meta") && segs.iter().any(|s| *s == "net.minecraft") {
+                return true;
+            }
+            // 4. launcher mod/modpack catalogs (norisk_modpacks.json, ...)
+            if file.contains("modpacks") {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 fn walk(
     dir: &Path,
     out: &mut Vec<Candidate>,
@@ -658,6 +724,9 @@ fn walk(
         } else if full.is_file() {
             let lower = name.to_ascii_lowercase();
             if !in_artifact && !is_candidate_ext(&lower) {
+                continue;
+            }
+            if !in_artifact && is_excluded_metadata_path(&full) {
                 continue;
             }
             let is_log = is_log_name(&lower);
@@ -965,7 +1034,7 @@ fn analyze_text_file(ctx: &mut Ctx, path: &Path, rel: &str, kind: Kind) -> Optio
         matches.extend(bare);
     }
     if optimizer.is_some() {
-        matches.retain(|m| !OPTIMIZER_EXPLAINED_PATTERNS.contains(&m.pattern_name.as_str()));
+        matches.retain(|m| !OPTIMIZER_EXPLAINED_PATTERNS.contains(&m.pattern_name));
     }
     if is_log {
         matches.retain(|m| m.severity == "critical" || m.severity == "high");
@@ -1133,7 +1202,8 @@ pub fn scan(
 
     if ctx.aborted() {
         let summary = generate_summary(&ctx, 0, launcher_names);
-        let results = std::mem::take(&mut ctx.findings);
+        let mut results = std::mem::take(&mut ctx.findings);
+        results.retain(|f| f.threat_level != "info");
         drop(ctx);
         return Ok(ConfigScanOutput {
             results,
@@ -1189,12 +1259,13 @@ pub fn scan(
         let rel = rel_of(root, &cand.path);
         let t_file = Instant::now();
         let finding = analyze_text_file(&mut ctx, &cand.path, &rel, cand.kind);
+        let is_threat = finding.as_ref().map_or(false, |f| f.threat_level != "info");
         trace!(
             t0,
             "analyze {} ({:.2}s){}",
             rel,
             t_file.elapsed().as_secs_f64(),
-            if finding.is_some() { " → FLAG" } else { "" }
+            if is_threat { " → FLAG" } else { "" }
         );
         let has_finding = finding.is_some();
         if let Some(f) = finding {
@@ -1214,7 +1285,11 @@ pub fn scan(
     let summary = generate_summary(&ctx, total, launcher_names);
     let aborted = ctx.aborted() || aborted_early;
     trace!(t0, "done: analyzed={} found={}", ctx.scanned, summary.found);
-    let results = std::mem::take(&mut ctx.findings);
+    let mut results = std::mem::take(&mut ctx.findings);
+    // Clean files never appear in the report: info mentions (crash/diagnostic
+    // reports, official-client files, known optimizers) were already counted
+    // into the summary above, then skipped here.
+    results.retain(|f| f.threat_level != "info");
     drop(ctx);
     if !aborted {
         emit(ConfigEvent::Complete {
@@ -1427,34 +1502,19 @@ mod tests {
             );
         }
 
-        // contexts
-        let crash = out
-            .results
-            .iter()
-            .find(|f| norm(&f.name).contains("crash-2026-09-23"))
-            .expect("crash mention");
-        assert_eq!(crash.threat_level, "info");
-        assert_eq!(crash.mod_id.as_deref(), Some("report"));
-        assert_eq!(crash.threat_score, 0);
-
-        let feather = find(".feather/modules.json").expect("feather mention");
-        assert_eq!(feather.0, "info");
-        assert_eq!(feather.2.as_deref(), Some("client"));
-        let feather_full = out
-            .results
-            .iter()
-            .find(|f| norm(&f.name) == ".feather/modules.json")
-            .unwrap();
-        assert!(feather_full.mod_loader.contains("Feather"));
-        assert_eq!(feather_full.threat_score, 0);
-
-        let opt = out
-            .results
-            .iter()
-            .find(|f| f.mod_id.as_deref() == Some("optimizer"))
-            .expect("optimizer mention");
-        assert!(opt.mod_loader.contains("Marlow"));
-        assert_eq!(opt.threat_score, 0);
+        // contexts: clean files are skipped entirely — never listed
+        assert!(
+            !out.results.iter().any(|f| norm(&f.name).contains("crash-2026-09-23")),
+            "crash report must be skipped, not listed"
+        );
+        assert!(
+            find(".feather/modules.json").is_none(),
+            "feather modules.json must be skipped (clean file)"
+        );
+        assert!(
+            !out.results.iter().any(|f| f.mod_id.as_deref() == Some("optimizer")),
+            "optimizer must be skipped (clean file)"
+        );
 
         // jars are never opened by the config scanner (jar analysis lives in
         // the mod scanner) — no result may reference a .jar at all
@@ -1463,9 +1523,9 @@ mod tests {
             "config scan must never produce jar findings"
         );
 
-        // info entries count (crash + feather + optimizer)
+        // no info entries: clean files are skipped from the report
         let infos = out.results.iter().filter(|f| f.threat_level == "info").count();
-        assert_eq!(infos, 3, "info entries");
+        assert_eq!(infos, 0, "clean files must be skipped (no info entries)");
 
         // category chips available for the UI filter tabs
         let ka = out

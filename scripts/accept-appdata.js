@@ -6,7 +6,10 @@
  *               (jar analysis lives in the mod scanner).
  *   MUST NOT  : threat-flag anything under crash-reports/, .feather/,
  *               sentry/, PrecisionScan*, mod-forensics*, Local/Session
- *               Storage — mentions (info) or nothing at all.
+ *               Storage — nothing at all.
+ *   MUST NOT  : list ANY info/mention entry — clean files (crash reports,
+ *               official-client files, known optimizers, ...) are skipped
+ *               entirely, so results contain real findings only.
  *   SOFT      : killaura.config / latest.log presence (reported, not fatal).
  *
  * Usage: node scripts/accept-appdata.js <cfgscan.json>
@@ -63,6 +66,10 @@ if (!results.some((f) => norm(f.name).endsWith('killaura.config'))) soft.push('k
 if (!results.some((f) => norm(f.name).endsWith('.minecraft/logs/latest.log'))) soft.push('latest.log not flagged (ok if log is clean)');
 const infoCount = results.filter((f) => f.threatLevel === 'info').length;
 console.log(`info mentions: ${infoCount} | soft: ${soft.length ? soft.join(' | ') : 'none'}`);
+if (infoCount) {
+  const names2 = results.filter((f) => f.threatLevel === 'info').map((f) => norm(f.name));
+  bad.push(`clean files listed as info — must be skipped: ${names2.slice(0, 5).join(', ')}${names2.length > 5 ? '…' : ''}`);
+}
 
 // ===== verdict list for manual review =====
 const flagged = results.filter((f) => f.threatLevel !== 'info');

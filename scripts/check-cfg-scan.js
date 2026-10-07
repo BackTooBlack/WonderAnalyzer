@@ -47,33 +47,20 @@ const mustNotFlag = [
 ];
 for (const n of mustNotFlag) if (names.includes(n)) bad.push('FALSE-POSITIVE ' + n);
 
-// ===== context rules =====
+// ===== clean files must be skipped entirely (never listed) =====
 const infoEntries = r.results.filter((f) => f.threatLevel === 'info');
 
-// Crash report: mention at most, never a threat
+// Crash report: diagnostic — skipped, not listed
 const crash = r.results.find((f) => norm(f.name).includes('crash-2026-09-23'));
-if (crash) {
-  if (crash.threatLevel !== 'info' || crash.modId !== 'report' || crash.threatScore !== 0) {
-    bad.push(`crash report must be info/report/0, got ${crash.threatLevel}/${crash.modId}/${crash.threatScore}`);
-  }
-}
+if (crash) bad.push('crash report must be skipped, not listed');
 
-// Feather: official-client mention only
+// Feather: official-client files are clean — skipped, not listed
 const feather = r.results.find((f) => norm(f.name) === '.feather/modules.json');
-if (!feather) bad.push('feather modules.json missing (expected mention)');
-else {
-  if (feather.threatLevel !== 'info' || feather.modId !== 'client') bad.push('feather must be info/client');
-  if (!String(feather.modLoader).includes('Feather')) bad.push('feather label must name the client');
-  if (feather.threatScore !== 0) bad.push('feather threatScore must be 0');
-}
+if (feather) bad.push('feather modules.json must be skipped (clean file)');
 
-// Optimizer: info mention naming the optimizer
+// Optimizer: clean file — must not appear (summary still counts it)
 const opt = infoEntries.find((f) => f.modId === 'optimizer');
-if (!opt) bad.push('optimizer info mention missing');
-else {
-  if (!String(opt.modLoader).includes('Marlow')) bad.push('optimizer mention must name the optimizer');
-  if (opt.threatScore !== 0) bad.push('optimizer threatScore must be 0');
-}
+if (opt) bad.push('optimizer must be skipped (clean file)');
 
 // Jars: the %APPDATA% scanner must never open or report a .jar
 const jars = r.results.filter((f) => norm(f.name).endsWith('.jar'));
@@ -94,7 +81,7 @@ if (s.warning !== 1) bad.push(`warning=${s.warning} expected 1`);
 if (s.optimizers !== 1) bad.push(`optimizers=${s.optimizers} expected 1`);
 if (s.artifacts !== 5) bad.push(`artifacts=${s.artifacts} expected 5 (2 folders + exe + 2 files)`);
 if (s.clients !== 1) bad.push(`clients=${s.clients} expected 1`);
-if (infoEntries.length !== 3) bad.push(`info entries=${infoEntries.length} expected 3`);
+if (infoEntries.length !== 0) bad.push(`info entries=${infoEntries.length} expected 0 (clean files skipped)`);
 
 console.log(bad.length ? 'FAIL: ' + bad.join('; ') : 'E2E_CONFIG_SCAN_PASS');
 process.exit(bad.length ? 1 : 0);

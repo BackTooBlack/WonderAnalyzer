@@ -371,7 +371,156 @@ fn run_stress(mods_dir: &Path, cfg_root: Option<&str>) -> i32 {
 
 // ===== GUI =====
 
+/// Best-effort probe for a WebView2 runtime, mirroring the places the
+/// WebView2Loader itself looks. Microsoft ended WebView2 support for Windows
+/// 7 at runtime 109 (January 2023), so there the evergreen
+/// installer may simply be absent — better to say so than to crash inside
+/// `tauri::Builder::run`. On Windows 10/11 the runtime ships with the OS and
+/// this always returns true.
+#[cfg(windows)]
+fn webview2_runtime_present() -> bool {
+    use std::os::windows::ffi::OsStrExt;
+    use std::path::PathBuf;
+
+    // WebView2 Evergreen runtime client GUID (EdgeUpdate `Clients` key).
+    const GUID: &str = "{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}";
+    const HKEY_CURRENT_USER: isize = 0x8000_0001u32 as isize;
+    const HKEY_LOCAL_MACHINE: isize = 0x8000_0002u32 as isize;
+    const RRF_RT_REG_SZ: u32 = 0x02;
+    const ERROR_SUCCESS: i32 = 0;
+
+    #[link(name = "advapi32")]
+    extern "system" {
+        fn RegGetValueW(
+            hkey: isize,
+            lpsubkey: *const u16,
+            lpvalue: *const u16,
+            dwflags: u32,
+            pdwtype: *mut u32,
+            pvdata: *mut std::ffi::c_void,
+            pcbdata: *mut u32,
+        ) -> i32;
+    }
+
+    fn wide(s: &str) -> Vec<u16> {
+        std::ffi::OsStr::new(s).encode_wide().chain(Some(0)).collect()
+    }
+
+    /// True when `hive\subkey` has a non-empty, non-uninstall `pv` string.
+    fn reg_client_present(hive: isize, subkey: &str) -> bool {
+        let sub = wide(subkey);
+        let val = wide("pv");
+        let mut buf = [0u16; 64];
+        let mut typ = 0u32;
+        let mut len = (buf.len() * 2) as u32;
+        let rc = unsafe {
+            RegGetValueW(
+                hive,
+                sub.as_ptr(),
+                val.as_ptr(),
+                RRF_RT_REG_SZ,
+                &mut typ,
+                buf.as_mut_ptr() as *mut std::ffi::c_void,
+                &mut len,
+            )
+        };
+        if rc != ERROR_SUCCESS {
+            return false;
+        }
+        let n = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+        let s: String = String::from_utf16_lossy(&buf[..n]);
+        !s.is_empty() && s != "0.0.0.0"
+    }
+
+    // 1. Fixed-version override (how people run WebView2 109 on Win7).
+    for var in ["WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", "WEBVIEW2_RELEASE_CHANNEL_FOLDER"] {
+        if let Ok(dir) = std::env::var(var) {
+            if PathBuf::from(&dir).is_dir() {
+                return true;
+            }
+        }
+    }
+    // 2. Evergreen client keys: HKLM/HKCU, 64-bit and WOW6432Node views.
+    for hive in [HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER] {
+        for view in ["SOFTWARE", "SOFTWARE\\WOW6432Node"] {
+            if reg_client_present(hive, &format!("{}\\Microsoft\\EdgeUpdate\\Clients\\{}", view, GUID)) {
+                return true;
+            }
+        }
+    }
+    // 3. Installed runtime directories (machine- and per-user-wide).
+    let mut dirs: Vec<PathBuf> = Vec::new();
+    if let Ok(pf) = std::env::var("ProgramFiles(x86)") {
+        dirs.push(PathBuf::from(pf));
+    }
+    if let Ok(pf) = std::env::var("ProgramFiles") {
+        dirs.push(PathBuf::from(pf));
+    }
+    if let Ok(pf) = std::env::var("LOCALAPPDATA") {
+        dirs.push(PathBuf::from(pf));
+    }
+    dirs.iter()
+        .any(|pf| pf.join("Microsoft").join("EdgeWebView").join("Application").is_dir())
+}
+
+#[cfg(not(windows))]
+fn webview2_runtime_present() -> bool {
+    true
+}
+
+#[cfg(windows)]
+fn show_webview2_missing_message() {
+    use std::os::windows::ffi::OsStrExt;
+
+    #[link(name = "user32")]
+    extern "system" {
+        fn MessageBoxW(
+            hwnd: isize,
+            lptext: *const u16,
+            lpcaption: *const u16,
+            utype: u32,
+        ) -> i32;
+    }
+
+    const MB_OK: u32 = 0x00;
+    const MB_ICONWARNING: u32 = 0x10;
+    const MB_SETFOREGROUND: u32 = 0x0001_0000;
+
+    fn wide(s: &str) -> Vec<u16> {
+        std::ffi::OsStr::new(s).encode_wide().chain(Some(0)).collect()
+    }
+
+    let text = concat!(
+        "WonderAnalyzer's window needs the Microsoft Edge WebView2 runtime, ",
+        "which was not found on this PC.\n\n",
+        "Windows 7: only WebView2 version 109 runs there (Microsoft ",
+        "ended support in January 2023). Install the \"Fixed Version 109\" ",
+        "package from the Microsoft Edge archive:\n",
+        "https://developer.microsoft.com/en-us/microsoft-edge/archive/webview2/\n\n",
+        "If WebView2 109 is installed in a custom folder, set the ",
+        "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER environment variable to that ",
+        "folder and start WonderAnalyzer again.\n\n",
+        "Scanning works without the GUI: open a command prompt in this ",
+        "folder and run\n",
+        "  WonderAnalyzer.exe --scan-mods <mods folder> [out.json]\n",
+        "  WonderAnalyzer.exe --scan-config <root> [out.json]"
+    );
+    let caption = "WonderAnalyzer - WebView2 runtime missing";
+    unsafe {
+        MessageBoxW(
+            0,
+            wide(text).as_ptr(),
+            wide(caption).as_ptr(),
+            MB_OK | MB_ICONWARNING | MB_SETFOREGROUND,
+        );
+    }
+}
+
 pub fn run_gui() {
+    if !webview2_runtime_present() {
+        show_webview2_missing_message();
+        std::process::exit(3);
+    }
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
