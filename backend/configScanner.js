@@ -89,7 +89,7 @@ function is_artifact_dir_name(name) {
     l.startsWith('wurst') || l.startsWith('.wurst');
 }
 
-// ===== Verified first-party clients: mentions, never threats =====
+// ===== Verified first-party clients: clean files, skipped from results =====
 function verified_client_label(name) {
   switch (name.toLowerCase()) {
     case '.feather': case 'feather': case 'featherclient': case 'feather launcher': return 'Feather Client';
@@ -111,6 +111,34 @@ function is_report_artifact_dir(lowerName) {
   return lowerName.includes('precisionscan') ||
     lowerName.includes('mod-forensics') ||
     lowerName.includes('forensics-report');
+}
+
+// ===== Launcher-managed metadata: never a cheat config =====
+// Bundled JRE conf files, Mojang version manifests and launcher
+// mod/modpack catalogs ship with the launcher itself; their stock
+// content (javax.sound comments, library URLs, mod ids like "freecam")
+// produced systematic false flags.
+const JRE_CONF_FILES = new Set([
+  'sound.properties', 'net.properties', 'management.properties',
+  'logging.properties', 'deprecation.properties', 'jaxp.properties',
+]);
+function isExcludedMetadataFile(fullPath) {
+  const segs = String(fullPath).replace(/\\/g, '/').toLowerCase().split('/');
+  const file = segs[segs.length - 1] || '';
+  // 1. bundled Java runtime dirs (Prism & friends: java-runtime-*)
+  if (segs.some((s) => s.startsWith('java-runtime-'))) return true;
+  // 2. stock JRE conf files (any layout: <runtime>/conf/*.properties)
+  if (JRE_CONF_FILES.has(file) && segs.includes('conf')) return true;
+  // 3. Mojang version manifests: versions/<ver>/<ver>.json
+  const dot = file.lastIndexOf('.');
+  const stem = dot > 0 ? file.slice(0, dot) : file;
+  const parent = segs.length >= 2 ? segs[segs.length - 2] : '';
+  if (file.endsWith('.json') && stem === parent && segs.includes('versions')) return true;
+  // 3b. launcher vanilla metadata stores (Prism: meta/net.minecraft/*.json)
+  if (file.endsWith('.json') && segs.includes('meta') && segs.includes('net.minecraft')) return true;
+  // 4. launcher mod/modpack catalogs (norisk_modpacks.json, modpacks.json, ...)
+  if (file.endsWith('.json') && file.includes('modpacks')) return true;
+  return false;
 }
 
 // Java/source patterns that are pure noise in .txt/.json config files.
@@ -163,7 +191,8 @@ function bareKeyMatches(content, alreadyMatched) {
   return out;
 }
 
-// Known performance optimizers: never flagged — only *mentioned* (info level)
+// Known performance optimizers: never flagged — counted in the summary and
+// skipped from the reported results (clean files are never listed)
 // so the user can see which optimizer they are using.
 const OPTIMIZER_EXPLAINED_PATTERNS = ['CrystalOptimizer'];
 
@@ -313,13 +342,17 @@ class ConfigScanner {
     }
 
     const summary = this.generateSummary(total, launcherNames);
+    // Clean files never appear in the report: info mentions (crash/diagnostic
+    // reports, official-client files, known optimizers) were already counted
+    // into the summary above, then skipped here.
+    const reported = this.findings.filter((f) => f.threatLevel !== 'info');
 
     if (this.aborted || abortedEarly) {
-      return { results: this.findings, summary, aborted: true };
+      return { results: reported, summary, aborted: true };
     }
 
-    this.emit('config-scan-complete', { results: this.findings, summary });
-    return { results: this.findings, summary };
+    this.emit('config-scan-complete', { results: reported, summary });
+    return { results: reported, summary };
   }
 
   // ===== Launcher discovery =====
@@ -468,6 +501,7 @@ class ConfigScanner {
       } else if (entry.isFile()) {
         if (inMods) continue; // jars only in mods/ — and jars are the mod scanner's job
         if (!inArtifact && !this.isCandidate(entry.name)) continue;
+        if (!inArtifact && isExcludedMetadataFile(full)) continue;
         try {
           const st = await fs.promises.stat(full);
           const max = isLogName(entry.name) ? MAX_LOG_FILE_SIZE : MAX_FILE_SIZE;

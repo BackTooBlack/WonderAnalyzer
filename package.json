@@ -1,6 +1,6 @@
 {
   "name": "wonder-analyzer",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "description": "WonderAnalyzer - Detect cheats, malware, suspicious mods, and cheat config files in %APPDATA%",
   "main": "main.js",
   "scripts": {

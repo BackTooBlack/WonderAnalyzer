@@ -20,7 +20,8 @@ A portable `WonderAnalyzer.exe` (~8.6 MB) is included at the repository root —
 - 300+ cheat signatures with **strong / weak gating**: a file must look like a configuration *and* carry real cheat signal (one strong signature, two distinct weak ones, or a weak hit plus a cheat-signal filename/folder) before it is flagged — clean files stay clean
 - Java-code pattern categories (mixins, access transformers, proxies) are excluded from config scans to avoid false positives
 - Launcher **logs** (`latest.log`, `log.txt`, up to 32 MB) are scanned for cheat-module evidence — strong signatures only, so chat mentions can never flag a log
-- Known **optimizers** (e.g. Marlow's Crystal Optimizer) are never flagged — they get a dedicated 💎 Optimizers mention so you always know which optimizer you're running
+- Known **optimizers** (e.g. Marlow's Crystal Optimizer) are never flagged and never listed — clean files are skipped entirely, while the 💎 Optimizers summary chip still reports how many are in use
+- **Clean files are skipped**: results contain only real threats — crash/diagnostic reports, official-client files, known optimizers and QoL configs never show up as findings
 
 **UI**
 - Modern dark theme: gradient actions, accent-edged result cards, launcher chips, pill filters, live scan counters, detail modal, search
@@ -45,6 +46,17 @@ npm install
 npm run build          # tauri build → src-tauri/target/release/wonder-analyzer.exe
 ```
 
+**Windows 7 release builds (x64 + x86, the binaries shipped in `dist/`):**
+
+```bash
+rustup component add rust-src      # one-time: -Zbuild-std compiles std from source
+node scripts/build-win-release.js          # both architectures (default)
+node scripts/build-win-release.js x64      # only 64-bit → dist/WonderAnalyzer.exe
+node scripts/build-win-release.js x86      # only 32-bit → dist/WonderAnalyzer-x86.exe
+```
+
+The script drives stable cargo with `RUSTC_BOOTSTRAP=1` + `-Zbuild-std` + `+crt-static` for the `x86_64-win7-windows-msvc` / `i686-win7-windows-msvc` targets (don't use a nightly toolchain — it hits a MAX_PATH link error in this checkout) and runs `tools/check-win7-compat.js` on every produced exe, failing the build if it would not start on Windows 7.
+
 The legacy Electron build is still available:
 
 ```bash
@@ -63,6 +75,26 @@ WonderAnalyzer.exe --stress-scans <mods-dir> [cfg-root] # stability harness (15 
 ```
 
 Unknown `--flags` exit with code `2` instead of launching the GUI.
+
+## Windows 7 support
+
+The release binaries in `dist/` are built specifically for **Windows 7 SP1 (64-bit and 32-bit)**:
+
+- `dist/WonderAnalyzer.exe` — x64 (`x86_64-win7-windows-msvc`)
+- `dist/WonderAnalyzer-x86.exe` — x86 (`i686-win7-windows-msvc`)
+
+How Win7 compatibility is achieved and verified:
+
+- Rust std is rebuilt from source with `-Zbuild-std` for the tier-3 `*-win7-windows-msvc` targets, so the binaries use Win7-era kernel32 APIs instead of the Win8+ imports (`WaitOnAddress`, `GetSystemTimePreciseAsFileTime`) that make normal builds die with `0xC0000139` before `main()` runs
+- The CRT is linked statically (`+crt-static`) — no VC++ Redistributable or KB2999226 needed
+- `node tools/check-win7-compat.js <exe>` is a static PE gate run automatically by `node scripts/build-win-release.js [x64|x86]`; it fails the build on any post-Win7 DLL/function import, a dynamic CRT, wrong machine type, or an OS/subsystem version above 6.1
+- `node tools/audit-vt-strings.js <exe>` verifies no plaintext signature strings leak into the shipped binary
+
+GUI notes for Windows 7: Microsoft ended WebView2 support at runtime **109** (January 2023), so the GUI needs the "Fixed Version 109" package from the [Microsoft Edge archive](https://developer.microsoft.com/en-us/microsoft-edge/archive/webview2/) (optionally pointed to by `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`). If WebView2 is missing, the app shows a message box with instructions instead of crashing.
+
+**The CLI works on Windows 7 with no extra installs** — `--scan-mods`, `--scan-config`, and `--stress-scans` never touch WebView2.
+
+Windows 8.1 is not a target of this build; only Windows 7 SP1 is verified.
 
 ## Development
 
